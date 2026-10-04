@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>OSINT-X</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #0a0e13;
+            --surface: #10161d;
+            --surface-2: #151d26;
+            --inset: #0b1016;
+            --line: #1f2a35;
+            --line-strong: #2c3a48;
+            --text: #e3eaf1;
+            --muted: #8294a6;
+            --faint: #55677a;
+            --bad: #e5736f;
+            --accent: #5ab8dc;
+            --accent-soft: rgba(90, 184, 220, 0.12);
+            --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+            --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box;
+            scrollbar-width: thin;
+            scrollbar-color: var(--line-strong) transparent;
+        }
+
+        html {
+            background: var(--bg);
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background: radial-gradient(1000px 420px at 50% -120px, rgba(90, 184, 220, 0.09), transparent 70%);
+        }
+
+        body {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 16px;
+            align-content: start;
+            max-width: 1120px;
+            min-height: 100vh;
+            margin: 0 auto;
+            padding: 56px 24px 80px;
+            font-family: var(--sans);
+            font-size: 15px;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        h1,
+        body > p,
+        #status,
+        .panel,
+        #logs {
+            grid-column: 1 / -1;
+        }
+
+        /* ---------- Header ---------- */
+
+        h1 {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 0;
+            font-size: 1.75rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        h1::before {
+            content: "";
+            flex: none;
+            width: 26px;
+            height: 26px;
+            border-radius: 7px;
+            border: 1px solid var(--accent);
+            background:
+                linear-gradient(var(--accent), var(--accent)) center / 1px 12px no-repeat,
+                linear-gradient(var(--accent), var(--accent)) center / 12px 1px no-repeat,
+                var(--accent-soft);
+        }
+
+        body > p {
+            margin: -10px 0 18px 38px;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        /* ---------- Form ---------- */
+
+        input {
+            display: block;
+            width: 100%;
+            height: 46px;
+            margin: 0;
+            padding: 0 14px 0 42px;
+            font: 400 0.95rem var(--sans);
+            color: var(--text);
+            background-color: var(--surface);
+            background-repeat: no-repeat;
+            background-position: 14px center;
+            background-size: 17px;
+            border: 1px solid var(--line-strong);
+            border-radius: 8px;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        #name {
+            grid-column: span 5;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238294a6' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/%3E%3C/svg%3E");
+        }
+
+        #target {
+            grid-column: span 4;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238294a6' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E");
+        }
+
+        input::placeholder {
+            color: var(--faint);
+        }
+
+        input:hover {
+            border-color: #38485a;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+
+        button {
+            grid-column: span 3;
+            height: 46px;
+            padding: 0 20px;
+            font: 600 0.95rem var(--sans);
+            color: #06131a;
+            background: var(--accent);
+            border: 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+        }
+
+        button:hover:not(:disabled) {
+            background: #7ccae8;
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        button:focus-visible {
+            outline: 2px solid var(--text);
+            outline-offset: 2px;
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            color: var(--faint);
+            background: var(--surface-2);
+        }
+
+        /* ---------- Status & progress ---------- */
+
+        #status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 0;
+            padding: 14px 18px;
+            font: 500 0.875rem var(--mono);
+            color: var(--text);
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+        }
+
+        #status::before {
+            content: "";
+            flex: none;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: blink 1.8s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0.3; }
+        }
+
+        .panel {
+            position: relative;
+            margin: 0;
+            padding: 20px 22px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+        }
+
+        strong {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            color: var(--muted);
+        }
+
+        #progressBar {
+            display: block;
+            width: 100%;
+            height: 8px;
+            margin-top: 12px;
+            accent-color: var(--accent);
+        }
+
+        #progressText {
+            margin-top: 10px;
+            font: 400 0.8rem var(--mono);
+            color: var(--muted);
+        }
+
+        /* ---------- Sections ---------- */
+
+        section.panel {
+            grid-column: 1 / -1;
+        }
+
+        #results {
+            font: 400 0.85rem/1.6 var(--mono);
+            color: var(--muted);
+            overflow-wrap: anywhere;
+        }
+
+        h2 {
+            margin: 0 0 14px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            color: var(--muted);
+        }
+
+        pre {
+            margin: 0;
+        }
+
+        #result,
+        #liveOutput,
+        #logs {
+            font-family: var(--mono);
+            font-size: 0.8rem;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        #liveOutput {
+            min-height: 220px;
+            max-height: 340px;
+            overflow: auto;
+            padding: 14px 16px;
+            color: #b4c3d1;
+            background: var(--inset);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+        }
+
+        #result {
+            color: var(--muted);
+        }
+
+        #result:empty {
+            display: none;
+        }
+
+        #logs {
+            margin: 0;
+            padding: 14px 18px;
+            min-height: 140px;
+            max-height: 240px;
+            overflow-y: auto;
+            color: var(--muted);
+            background: var(--inset);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+        }
+
+        #logs::before {
+            content: "Activity log";
+            display: block;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            font: 600 0.8rem var(--sans);
+            letter-spacing: 0.04em;
+            color: var(--faint);
+            border-bottom: 1px solid var(--line);
+        }
+
+        /* ---------- Results: tree ---------- */
+
+        .results-summary {
+            margin: 0 0 18px;
+            padding-bottom: 14px;
+            font: 400 0.8rem var(--mono);
+            color: var(--muted);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .flow-empty {
+            margin: 0;
+            color: var(--muted);
+            font: 400 0.8rem/1.6 var(--mono);
+            overflow-wrap: anywhere;
+        }
+
+        .tree {
+            padding: 4px 2px 0;
+        }
+
+        .tree-children {
+            margin: 0;
+            padding: 0 0 0 26px;
+            list-style: none;
+        }
+
+        .tree-node {
+            position: relative;
+            padding-top: 8px;
+        }
+
+        .tree-row {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            min-height: 26px;
+            font: 400 0.85rem/26px var(--mono);
+            color: var(--text);
+        }
+
+        /* trunk from a node down to its children */
+        .tree-row.has-children::after {
+            content: "";
+            position: absolute;
+            left: 4px;
+            top: 17px;
+            bottom: 0;
+            width: 1px;
+            background: var(--line-strong);
+        }
+
+        .tree-dot {
+            flex: none;
+            width: 8px;
+            height: 8px;
+            margin-top: 9px;
+            border: 1px solid var(--faint);
+            border-radius: 50%;
+            background: var(--surface);
+        }
+
+        .tree-tag {
+            flex: none;
+            min-width: 80px;
+            font: 600 0.65rem/26px var(--sans);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--faint);
+        }
+
+        .tree-value {
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+
+        /* branch lines between siblings */
+        .tree-children > .tree-node::before {
+            content: "";
+            position: absolute;
+            left: -22px;
+            top: 0;
+            width: 18px;
+            height: 21px;
+            border-left: 1px solid var(--line-strong);
+            border-bottom: 1px solid var(--line-strong);
+            border-bottom-left-radius: 8px;
+        }
+
+        .tree-children > .tree-node:not(:last-child)::after {
+            content: "";
+            position: absolute;
+            left: -22px;
+            top: 21px;
+            bottom: 0;
+            width: 1px;
+            background: var(--line-strong);
+        }
+
+        /* extra air between sites */
+        .tree > .tree-children > .tree-node {
+            padding-top: 18px;
+        }
+
+        .tree > .tree-children > .tree-node::before {
+            height: 31px;
+        }
+
+        .tree > .tree-children > .tree-node:not(:last-child)::after {
+            top: 31px;
+        }
+
+        /* levels */
+        .tree-root .tree-dot {
+            width: 10px;
+            height: 10px;
+            margin: 8px 0 0 -1px;
+            border-color: var(--accent);
+            background: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-soft);
+        }
+
+        .tree-root .tree-tag {
+            color: var(--accent);
+        }
+
+        .tree-root .tree-value {
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+
+        .tree-site .tree-dot {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+        }
+
+        .tree-site .tree-value {
+            font-weight: 500;
+        }
+
+        .tree-url .tree-value {
+            font-size: 0.82rem;
+        }
+
+        .tree-service {
+            margin-right: 10px;
+            color: var(--faint);
+        }
+
+        .tree-url a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .tree-url a:hover {
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .tree-ip .tree-dot {
+            border-color: var(--muted);
+        }
+
+        .tree-shodan .tree-dot {
+            border-color: var(--accent);
+            background: var(--accent);
+        }
+
+        .tree-shodan .tree-value {
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        .tree-shodan.is-ok .tree-value {
+            color: var(--accent);
+        }
+
+        .tree-shodan.is-bad .tree-value {
+            color: var(--bad);
+        }
+
+        .tree-muted .tree-value {
+            color: var(--faint);
+        }
+
+        /* shodan data */
+        .tree-chips {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+            margin: 6px 0 0 18px;
+        }
+
+        .tree-chip-label {
+            flex: none;
+            min-width: 84px;
+            font: 600 0.65rem var(--sans);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--faint);
+        }
+
+        .tree-chip {
+            padding: 1px 8px;
+            font: 400 0.75rem/1.6 var(--mono);
+            color: var(--text);
+            background: var(--surface-2);
+            border: 1px solid var(--line);
+            border-radius: 5px;
+            overflow-wrap: anywhere;
+        }
+
+        .tree-chip.is-bad {
+            color: var(--bad);
+            border-color: rgba(229, 115, 111, 0.4);
+        }
+
+        /* upcoming stages */
+        #results:has(.tree)::after {
+            content: "Pending    \25CB LeakIX    \25CB Correlation    \25CB Graph / Map / Timeline";
+            display: block;
+            margin-top: 22px;
+            padding: 12px 16px;
+            font: 400 0.8rem/1.6 var(--mono);
+            color: var(--faint);
+            white-space: pre-wrap;
+            border: 1px dashed var(--line-strong);
+            border-radius: 8px;
+        }
+
+        /* ---------- Responsive / motion ---------- */
+
+        @media (max-width: 760px) {
+            body {
+                padding: 32px 16px 56px;
+            }
+
+            #name,
+            #target,
+            button,
+            section.panel,
+            #resultsPanel {
+                grid-column: 1 / -1;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #status::before {
+                animation: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>OSINT-X</h1>
+
+    <p>Open Source Intelligence Platform</p>
+
+
+    <input
+        id="name"
+        type="text"
+        placeholder="Investigation name"
+    >
+
+    <input
+        id="target"
+        type="text"
+        placeholder="Username"
+    >
+
+    <button
+        id="startButton"
+        onclick="createInvestigation()"
+    >
+        Start Investigation
+    </button>
+
+
+    <div id="status" role="status" aria-live="polite">
+        Status: Waiting
+    </div>
+
+    <div class="panel">
+        <strong>Progress</strong>
+        <progress id="progressBar" max="100" value="0"></progress>
+        <div id="progressText">Waiting for an investigation</div>
+    </div>
+
+    <section class="panel" aria-labelledby="liveOutputHeading">
+        <h2 id="liveOutputHeading">Live Sherlock output</h2>
+        <pre id="liveOutput">No output received yet.</pre>
+    </section>
+
+    <section id="resultsPanel" class="panel" aria-labelledby="resultsHeading">
+        <h2 id="resultsHeading">Investigation results</h2>
+        <div id="results">
+            <p class="flow-empty">Results will appear here when the investigation completes.</p>
+        </div>
+    </section>
+
+    <div id="result" class="panel" aria-live="polite"></div>
+
+
+    <div id="logs"></div>
+
+
+    <!-- Socket.IO client -->
+    <script src="/socket.io/socket.io.js"></script>
+
+
+    <script>
+
+        // =================================
+        // SOCKET.IO CONNECTION
+        // =================================
+
+        const socket = io();
+
+        let currentJobId = null;
+        let isSubmitting = false;
+        let pendingJobEvents = [];
+        let receivedOutputLines = 0;
+
+
+        socket.on("connect", () => {
+
+            console.log(
+                "WebSocket connected:",
+                socket.id
+            );
+
+            addLog(
+                "WebSocket connected"
+            );
+
+        });
+
+
+        socket.on("disconnect", () => {
+
+            console.log(
+                "WebSocket disconnected"
+            );
+
+            addLog(
+                "WebSocket disconnected"
+            );
+
+        });
+
+
+        // =================================
+        // CREATE INVESTIGATION
+        // =================================
+
+        async function createInvestigation() {
+
+            const name =
+                document.getElementById("name").value.trim();
+
+            const target =
+                document.getElementById("target").value.trim();
+
+            const button =
+                document.getElementById("startButton");
+
+
+            // Validation
+
+            if (!name || !target) {
+
+                alert(
+                    "Please enter investigation name and target."
+                );
+
+                return;
+            }
+
+            if (!/^[a-zA-Z0-9._-]+$/.test(target)) {
+                alert(
+                    "Please enter a username using only letters, numbers, dots, underscores, or hyphens."
+                );
+
+                return;
+            }
+
+            if (!socket.connected || !socket.id) {
+
+                setStatus(
+                    "Cannot start investigation while WebSocket is disconnected"
+                );
+
+                addLog(
+                    "Investigation not queued because the WebSocket is disconnected"
+                );
+
+                return;
+            }
+            button.disabled = true;
+            currentJobId = null;
+            isSubmitting = true;
+            pendingJobEvents = [];
+            receivedOutputLines = 0;
+            document.getElementById("progressBar").value = 0;
+            document.getElementById("progressText").textContent =
+                "Submitting investigation...";
+            document.getElementById("liveOutput").textContent =
+                "Waiting for Sherlock output...";
+            document.getElementById("results").textContent =
+                "Results will appear here when the investigation completes.";
+            document.getElementById("result").textContent = "";
+
+            setStatus(
+                "Sending investigation..."
+            );
+
+
+            try {
+
+                const response = await fetch(
+                    "/api/investigations",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            name,
+                            target,
+                            socketId: socket.id
+                        })
+                    }
+                );
+
+
+                const data =
+                    await response.json();
+
+                if (!response.ok || !data.success) {
+                    setStatus(
+                        data.error || "Investigation failed to start"
+                    );
+                    document.getElementById("result").textContent =
+                        data.error || "The server rejected the investigation.";
+                    pendingJobEvents = [];
+                    return;
+                }
+
+                // Save Job ID
+
+                currentJobId =
+                    data.jobId;
+
+                // Show API response
+
+                document.getElementById(
+                    "result"
+                ).textContent =
+                    JSON.stringify(
+                        data,
+                        null,
+                        2
+                    );
+
+
+                if (data.success) {
+
+                    setStatus(
+                        `Investigation queued | Job ID: ${currentJobId}`
+                    );
+
+                    addLog(
+                        `Investigation queued: Job ${currentJobId}`
+                    );
+
+                }
+
+                for (const pendingEvent of pendingJobEvents) {
+                    if (
+                        String(pendingEvent.data.jobId) ===
+                        String(currentJobId)
+                    ) {
+                        handleJobEvent(
+                            pendingEvent.event,
+                            pendingEvent.data
+                        );
+                    }
+                }
+                pendingJobEvents = [];
+
+            } catch (error) {
+
+                console.error(error);
+
+                setStatus(
+                    "Could not connect to backend"
+                );
+
+                addLog(
+                    "Backend connection error"
+                );
+
+            } finally {
+
+                isSubmitting = false;
+                button.disabled = false;
+
+            }
+        }
+
+
+        // =================================
+        // JOB PROGRESS
+        // =================================
+
+        socket.on("investigation:progress", (data) => {
+            receiveJobEvent("progress", data);
+        });
+
+        socket.on("investigation:output", (data) => {
+            receiveJobEvent("output", data);
+        });
+
+
+        // =================================
+        // JOB COMPLETED
+        // =================================
+
+        socket.on("investigation:completed", (data) => {
+            receiveJobEvent("completed", data);
+        });
+
+
+        // =================================
+        // JOB FAILED
+        // =================================
+
+        socket.on("investigation:failed", (data) => {
+            receiveJobEvent("failed", data);
+        });
+
+
+        function receiveJobEvent(event, data) {
+            if (String(data.jobId) === String(currentJobId)) {
+                handleJobEvent(event, data);
+                return;
+            }
+
+            if (isSubmitting && currentJobId === null) {
+                pendingJobEvents.push({ event, data });
+            }
+        }
+
+
+        function handleJobEvent(event, data) {
+            if (event === "progress") {
+                const progressBar =
+                    document.getElementById("progressBar");
+
+                progressBar.value = data.progress;
+                document.getElementById("progressText").textContent =
+                    data.progress >= 100
+                        ? "Finalizing results..."
+                        : `Sherlock search started (${data.progress}%)`;
+
+                setStatus(
+                    `Investigation running | ${data.progress}%`
+                );
+                addLog(
+                    `Job ${data.jobId} → ${data.progress}%`
+                );
+                return;
+            }
+
+            if (event === "output") {
+                const liveOutput =
+                    document.getElementById("liveOutput");
+
+                document.getElementById("progressBar")
+                    .removeAttribute("value");
+
+                if (liveOutput.textContent === "Waiting for Sherlock output...") {
+                    liveOutput.textContent = "";
+                }
+
+                liveOutput.textContent += data.output;
+                receivedOutputLines +=
+                    (data.output.match(/\n/g) || []).length;
+
+                document.getElementById("progressText").textContent =
+                    `Sherlock is searching... ${receivedOutputLines} output lines received`;
+                setStatus("Investigation running | Sherlock is searching");
+                liveOutput.scrollTop = liveOutput.scrollHeight;
+                return;
+            }
+
+            if (event === "completed") {
+                const progressBar =
+                    document.getElementById("progressBar");
+
+                progressBar.value = 100;
+                document.getElementById("progressText").textContent =
+                    "Investigation complete";
+
+                renderInvestigationFlow(data.result);
+
+                setStatus("Investigation completed ✓");
+                addLog(`Job ${data.jobId} completed`);
+                return;
+            }
+
+            if (event === "failed") {
+                document.getElementById("progressText").textContent =
+                    "Investigation failed";
+                document.getElementById("results").textContent =
+                    `Investigation failed: ${data.error}`;
+                setStatus("Investigation failed ❌");
+                addLog(`Job ${data.jobId} failed: ${data.error}`);
+            }
+        }
+
+
+        function renderInvestigationFlow(investigation) {
+            const results = document.getElementById("results");
+            results.replaceChildren();
+
+            const profiles = extractSherlockProfiles(
+                investigation?.sherlock
+            );
+            const dnsResults = Array.isArray(investigation?.dns)
+                ? investigation.dns
+                : [];
+            const shodanResults = Array.isArray(investigation?.shodan)
+                ? investigation.shodan
+                : [];
+            const dnsByDomain = new Map(
+                dnsResults.map((dns) => [
+                    String(dns.domain || "").toLowerCase(),
+                    dns
+                ])
+            );
+            const shodanByIp = new Map(
+                shodanResults.map((shodan) => [
+                    String(shodan.ip || ""),
+                    shodan
+                ])
+            );
+            const domains = new Map();
+
+            for (const profile of profiles) {
+                if (!domains.has(profile.hostname)) {
+                    domains.set(profile.hostname, []);
+                }
+
+                domains.get(profile.hostname).push(profile);
+            }
+
+            for (const domain of investigation?.domains || []) {
+                const hostname = String(domain).toLowerCase();
+                if (!domains.has(hostname)) {
+                    domains.set(hostname, []);
+                }
+            }
+
+            const summary = document.createElement("div");
+            summary.className = "results-summary";
+            summary.textContent =
+                `${profiles.length} profile URL${profiles.length === 1 ? "" : "s"} found · ` +
+                `${dnsResults.length} domain${dnsResults.length === 1 ? "" : "s"} resolved · ` +
+                `${shodanResults.length} Shodan lookup${shodanResults.length === 1 ? "" : "s"}`;
+            results.append(summary);
+
+            if (domains.size === 0) {
+                const empty = document.createElement("p");
+                empty.className = "flow-empty";
+                empty.textContent =
+                    "Sherlock did not return any profile URLs or domains.";
+                results.append(empty);
+                return;
+            }
+
+            // Tree: username > site > (profile URL | IP > Shodan)
+
+            const username =
+                document.getElementById("target").value.trim();
+
+            const tree = createTreeElement("div", "tree");
+            const rootRow = createTreeRow(
+                "root",
+                "Username",
+                username || "Target"
+            );
+            rootRow.classList.add("has-children");
+            tree.append(rootRow);
+
+            const siteList = createTreeElement("ul", "tree-children");
+
+            for (const [domain, domainProfiles] of domains) {
+                const dns = dnsByDomain.get(domain) || {
+                    ipv4: [],
+                    ipv6: []
+                };
+                const ipv4 = Array.isArray(dns.ipv4) ? dns.ipv4 : [];
+                const ipv6 = Array.isArray(dns.ipv6) ? dns.ipv6 : [];
+
+                const site = createTreeElement("li", "tree-node");
+                const siteRow = createTreeRow("site", "Site", domain);
+                siteRow.classList.add("has-children");
+                site.append(siteRow);
+
+                const children = createTreeElement("ul", "tree-children");
+
+                if (domainProfiles.length === 0) {
+                    children.append(
+                        createTreeLeaf(
+                            "url",
+                            "Profile",
+                            "No matching Sherlock profile URL.",
+                            "tree-muted"
+                        )
+                    );
+                }
+
+                for (const profile of domainProfiles) {
+                    const value = document.createDocumentFragment();
+
+                    const service = createTreeElement(
+                        "span",
+                        "tree-service",
+                        profile.service
+                    );
+
+                    const link = document.createElement("a");
+                    link.href = profile.url;
+                    link.target = "_blank";
+                    link.rel = "noopener noreferrer";
+                    link.textContent = profile.url;
+
+                    value.append(service, link);
+                    children.append(
+                        createTreeLeaf("url", "Profile", value)
+                    );
+                }
+
+                if (ipv4.length === 0 && ipv6.length === 0) {
+                    children.append(
+                        createTreeLeaf(
+                            "ip",
+                            "IP",
+                            dns.error || "No IP addresses found.",
+                            "tree-muted"
+                        )
+                    );
+                }
+
+                for (const ip of ipv4) {
+                    const node = createTreeElement("li", "tree-node");
+                    const row = createTreeRow("ip", "IPv4", ip);
+                    row.classList.add("has-children");
+                    node.append(row);
+                    appendShodanNode(node, shodanByIp.get(String(ip)));
+                    children.append(node);
+                }
+
+                for (const ip of ipv6) {
+                    children.append(createTreeLeaf("ip", "IPv6", ip));
+                }
+
+                site.append(children);
+                siteList.append(site);
+            }
+
+            tree.append(siteList);
+            results.append(tree);
+        }
+
+
+        function extractSherlockProfiles(output) {
+            const text = String(output || "")
+                .replace(/\x1B\][^\x07]*(?:\x07|\x1B\\)/g, "")
+                .replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, "");
+            const profiles = [];
+            const profilePattern =
+                /\[\+\]\s*([^:\r\n]+):\s*(https?:\/\/\S+)/g;
+            let match;
+
+            while ((match = profilePattern.exec(text)) !== null) {
+                try {
+                    const url = new URL(match[2]);
+                    if (url.protocol !== "http:" && url.protocol !== "https:") {
+                        continue;
+                    }
+
+                    profiles.push({
+                        service: match[1].trim(),
+                        url: url.href,
+                        hostname: url.hostname.toLowerCase()
+                    });
+                } catch (error) {
+                    console.warn(
+                        `Skipping invalid Sherlock profile URL: ${match[2]}`,
+                        error
+                    );
+                }
+            }
+
+            return profiles;
+        }
+
+
+        function createTreeElement(tag, className, text) {
+            const element = document.createElement(tag);
+            element.className = className;
+
+            if (text !== undefined) {
+                element.textContent = text;
+            }
+
+            return element;
+        }
+
+
+        function createTreeRow(level, label, value, extraClass) {
+            const row = createTreeElement(
+                "div",
+                `tree-row tree-${level}${extraClass ? " " + extraClass : ""}`
+            );
+
+            const content = createTreeElement("span", "tree-value");
+            if (typeof value === "string") {
+                content.textContent = value;
+            } else {
+                content.append(value);
+            }
+
+            row.append(
+                createTreeElement("span", "tree-dot"),
+                createTreeElement("span", "tree-tag", label),
+                content
+            );
+
+            return row;
+        }
+
+
+        function createTreeLeaf(level, label, value, extraClass) {
+            const node = createTreeElement("li", "tree-node");
+            node.append(createTreeRow(level, label, value, extraClass));
+            return node;
+        }
+
+
+        function appendShodanNode(parent, result) {
+            let state = "";
+            let message = "No InternetDB record found";
+
+            if (!result) {
+                message = "No Shodan result was returned.";
+            } else if (result.error) {
+                state = "is-bad";
+                message = `Lookup failed: ${result.error}`;
+            } else if (result.found) {
+                state = "is-ok";
+                message = "InternetDB record found";
+            }
+
+            const list = createTreeElement("ul", "tree-children");
+            const node = createTreeElement("li", "tree-node");
+            node.append(
+                createTreeRow("shodan", "Shodan", message, state)
+            );
+
+            if (result && !result.error) {
+                appendShodanChips(node, "Ports", result.ports);
+                appendShodanChips(node, "Hostnames", result.hostnames);
+                appendShodanChips(node, "Tags", result.tags);
+                appendShodanChips(
+                    node,
+                    "Vulns",
+                    result.vulnerabilities,
+                    true
+                );
+                appendShodanChips(node, "CPEs", result.cpes);
+            }
+
+            list.append(node);
+            parent.append(list);
+        }
+
+
+        function appendShodanChips(parent, label, values, isBad) {
+            if (!Array.isArray(values) || values.length === 0) {
+                return;
+            }
+
+            const row = createTreeElement("div", "tree-chips");
+            row.append(createTreeElement("span", "tree-chip-label", label));
+
+            for (const value of values) {
+                row.append(
+                    createTreeElement(
+                        "span",
+                        `tree-chip${isBad ? " is-bad" : ""}`,
+                        String(value)
+                    )
+                );
+            }
+
+            parent.append(row);
+        }
+
+
+        // =================================
+        // UI HELPERS
+        // =================================
+
+        function setStatus(message) {
+
+            document.getElementById(
+                "status"
+            ).textContent = message;
+
+        }
+
+
+        function addLog(message) {
+
+            const logs =
+                document.getElementById("logs");
+
+            logs.textContent +=
+                message + "\n";
+
+            logs.scrollTop =
+                logs.scrollHeight;
+
+        }
+
+    </script>
+
+</body>
+</html>
